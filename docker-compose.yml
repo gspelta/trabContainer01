@@ -1,0 +1,55 @@
+services:
+  # backend em flask
+  backend:
+    build:
+      context: guess_game
+    ports:
+      - "5000"
+    environment:
+      FLASK_APP: "run.py"
+      FLASK_DB_TYPE: "postgres"
+      FLASK_DB_USER: "root"
+      FLASK_DB_NAME: "dbgame"
+      FLASK_DB_PASSWORD: "passtest"
+      FLASK_DB_HOST: "db"
+      FLASK_DB_PORT: "5432"
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - gamenetwork
+
+  # banco postgres
+  db:
+    image: postgres:15
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "passtest"
+      POSTGRES_DB: "dbgame"
+    restart: unless-stopped
+    networks:
+      - gamenetwork
+
+  # NGINX como frontend
+  nginx:
+    build: frontend
+    image: nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - gamenetwork
+
+# volumes para persistência de dados
+volumes:
+  database_volume:
+
+# redes para os containers
+networks:
+  gamenetwork:
